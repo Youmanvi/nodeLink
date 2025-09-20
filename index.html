@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced NLP Text Preprocessor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 Advanced NLP Text Preprocessor</h1>
+            <p>Extract keywords, context, and relationships for LLM processing</p>
+        </header>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="inputText">Enter your text for comprehensive NLP preprocessing:</label>
+                <textarea 
+                    id="inputText" 
+                    placeholder="Enter any text - articles, documents, conversations, technical content, or any other text. The system will automatically identify the context, extract key information, and prepare it for LLM processing..."
+                    rows="12"
+                ></textarea>
+            </div>
+            
+            <div class="controls">
+                <div class="processing-options">
+                    <h3>📋 Processing Options</h3>
+                    <div class="checkbox-grid">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="basicPreprocessing" checked>
+                            <label for="basicPreprocessing">Basic Preprocessing</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="keywordExtraction" checked>
+                            <label for="keywordExtraction">Keyword Extraction</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="entityRecognition" checked>
+                            <label for="entityRecognition">Entity Recognition</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sentimentAnalysis" checked>
+                            <label for="sentimentAnalysis">Sentiment Analysis</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="topicModeling" checked>
+                            <label for="topicModeling">Topic Modeling</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="relationshipMapping" checked>
+                            <label for="relationshipMapping">Relationship Mapping</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="context-analysis">
+                    <h3>🎯 Context Analysis</h3>
+                    <div class="checkbox-grid">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="domainDetection" checked>
+                            <label for="domainDetection">Domain Detection</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="intentClassification" checked>
+                            <label for="intentClassification">Intent Classification</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="conceptExtraction" checked>
+                            <label for="conceptExtraction">Concept Extraction</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="contextualEmbedding" checked>
+                            <label for="contextualEmbedding">Contextual Embedding</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="process-btn" onclick="processText()">
+                    <span class="btn-text">🚀 Process Text</span>
+                    <span class="btn-loader" style="display: none;">⏳ Processing...</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="results" id="results" style="display: none;">
+            <div class="result-grid">
+                <!-- Original Text Panel -->
+                <div class="result-panel">
+                    <h3>📝 Original Text</h3>
+                    <div class="result-content" id="originalText"></div>
+                    <div class="text-stats">
+                        <span id="originalStats">0 words, 0 characters</span>
+                    </div>
+                </div>
+                
+                <!-- Context Analysis Panel -->
+                <div class="result-panel">
+                    <h3>🎯 Context Analysis</h3>
+                    <div class="result-content" id="contextAnalysis"></div>
+                </div>
+                
+                <!-- Keywords & Entities Panel -->
+                <div class="result-panel full-width">
+                    <h3>🔑 Keywords & Named Entities</h3>
+                    <div class="keywords-container">
+                        <div class="keyword-section">
+                            <h4>Top Keywords</h4>
+                            <div class="keyword-tags" id="topKeywords"></div>
+                        </div>
+                        <div class="keyword-section">
+                            <h4>Named Entities</h4>
+                            <div class="entity-tags" id="namedEntities"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Relationships Panel -->
+                <div class="result-panel full-width">
+                    <h3>🔗 Concept Relationships</h3>
+                    <div class="relationships-container" id="relationships"></div>
+                </div>
+                
+                <!-- Processed Text Panel -->
+                <div class="result-panel">
+                    <h3>⚡ Processed Text</h3>
+                    <div class="result-content" id="processedText"></div>
+                </div>
+                
+                <!-- LLM-Ready Output Panel -->
+                <div class="result-panel">
+                    <h3>🤖 LLM-Ready Format</h3>
+                    <div class="result-content code-format" id="llmFormat"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('llmFormat')">📋 Copy</button>
+                </div>
+                
+                <!-- Statistics Panel -->
+                <div class="result-panel full-width">
+                    <h3>📊 Processing Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="originalWords">0</div>
+                            <div class="stat-label">Original Words</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="processedWords">0</div>
+                            <div class="stat-label">Processed Words</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="keywordCount">0</div>
+                            <div class="stat-label">Keywords Found</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="entityCount">0</div>
+                            <div class="stat-label">Entities Found</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="relationshipCount">0</div>
+                            <div class="stat-label">Relationships</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="sentimentScore">Neutral</div>
+                            <div class="stat-label">Sentiment</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Processing Log Panel -->
+                <div class="result-panel full-width">
+                    <h3>🛠️ Processing Pipeline</h3>
+                    <div class="processing-log" id="processingLog"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html> 
