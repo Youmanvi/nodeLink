@@ -41,15 +41,6 @@ class AdvancedNLPProcessor:
         self.stop_words = set()
         self.tfidf_vectorizer = TfidfVectorizer(max_features=1000, stop_words='english')
         
-        # Domain classification keywords
-        self.domain_keywords = {
-            'technology': ['ai', 'artificial intelligence', 'machine learning', 'algorithm', 'software', 'computer', 'digital', 'technology', 'tech', 'programming', 'code', 'data', 'system', 'network'],
-            'healthcare': ['medical', 'health', 'patient', 'doctor', 'hospital', 'treatment', 'medicine', 'clinical', 'diagnosis', 'therapy', 'pharmaceutical', 'disease', 'wellness'],
-            'business': ['company', 'business', 'market', 'financial', 'economy', 'profit', 'revenue', 'customer', 'sales', 'management', 'corporate', 'strategy', 'investment'],
-            'science': ['research', 'study', 'experiment', 'scientific', 'analysis', 'theory', 'hypothesis', 'data', 'methodology', 'findings', 'evidence', 'laboratory'],
-            'education': ['student', 'teacher', 'school', 'university', 'learning', 'education', 'academic', 'curriculum', 'knowledge', 'instruction', 'classroom'],
-            'environment': ['climate', 'environment', 'pollution', 'sustainability', 'ecosystem', 'conservation', 'renewable', 'carbon', 'green', 'nature', 'biodiversity']
-        }
         
         self.intent_patterns = {
             'question': [r'\?', r'what', r'how', r'why', r'when', r'where', r'who', r'which'],
@@ -94,22 +85,6 @@ class AdvancedNLPProcessor:
             logger.error(f"Error initializing models: {e}")
             raise
     
-    def detect_domain(self, text: str) -> Tuple[str, float]:
-        """Detect the domain/topic of the text."""
-        text_lower = text.lower()
-        domain_scores = {}
-        
-        for domain, keywords in self.domain_keywords.items():
-            score = sum(1 for keyword in keywords if keyword in text_lower)
-            if score > 0:
-                domain_scores[domain] = score / len(keywords)
-        
-        if domain_scores:
-            best_domain = max(domain_scores, key=domain_scores.get)
-            confidence = domain_scores[best_domain]
-            return best_domain, confidence
-        
-        return 'general', 0.0
     
     def classify_intent(self, text: str) -> str:
         """Classify the intent of the text."""
@@ -392,7 +367,6 @@ class AdvancedNLPProcessor:
             'content': {
                 'original_text': original_text,
                 'processed_text': analysis_results.get('processed_text', ''),
-                'domain': analysis_results.get('context_analysis', {}).get('domain', 'general'),
                 'intent': analysis_results.get('context_analysis', {}).get('intent', 'informational')
             },
             'keywords': {
@@ -420,7 +394,7 @@ class AdvancedNLPProcessor:
                 }
             },
             'instructions_for_llm': {
-                'context_summary': f"This {analysis_results.get('context_analysis', {}).get('domain', 'general')} text has {analysis_results.get('context_analysis', {}).get('intent', 'informational')} intent.",
+                'context_summary': f"This text has {analysis_results.get('context_analysis', {}).get('intent', 'informational')} intent.",
                 'key_focus_areas': [kw['word'] for kw in analysis_results.get('keywords', [])[:3]],
                 'suggested_approach': self._suggest_llm_approach(analysis_results)
             }
@@ -428,20 +402,19 @@ class AdvancedNLPProcessor:
     
     def _suggest_llm_approach(self, analysis_results: Dict) -> str:
         """Suggest optimal LLM processing approach based on analysis."""
-        domain = analysis_results.get('context_analysis', {}).get('domain', 'general')
         intent = analysis_results.get('context_analysis', {}).get('intent', 'informational')
         complexity = analysis_results.get('readability', {}).get('complexity', 'standard')
         
         if intent == 'question':
-            return f"Answer the question with focus on {domain} domain concepts. Use clear, structured responses."
+            return "Answer the question with clear, structured responses."
         elif intent == 'explanation':
-            return f"Provide detailed explanation emphasizing {domain} terminology and concepts."
+            return "Provide detailed explanation emphasizing key terminology and concepts."
         elif intent == 'analysis':
-            return f"Perform analytical breakdown with attention to relationships between key concepts."
+            return "Perform analytical breakdown with attention to relationships between key concepts."
         elif complexity in ['difficult', 'very difficult']:
-            return f"Simplify complex {domain} concepts while maintaining technical accuracy."
+            return "Simplify complex concepts while maintaining technical accuracy."
         else:
-            return f"Process as {intent} content in {domain} domain with standard approach."
+            return f"Process as {intent} content with standard approach."
     
     def process_text_advanced(self, text: str, options: Dict[str, bool]) -> Dict[str, Any]:
         """
@@ -469,22 +442,18 @@ class AdvancedNLPProcessor:
                 results['processed_text'] = text
             
             # Context Analysis
-            if options.get('domainDetection', True) or options.get('intentClassification', True):
-                domain, domain_confidence = self.detect_domain(text)
+            if options.get('intentClassification', True):
                 intent = self.classify_intent(text)
                 readability = self.calculate_readability(text)
                 
                 results['context_analysis'] = {
-                    'domain': domain,
-                    'domain_confidence': domain_confidence,
                     'intent': intent,
                     'complexity': readability['complexity'],
                     'readability_score': readability['flesch_ease'],
                     'grade_level': readability['flesch_kincaid'],
-                    'language': 'english',
-                    'topic_confidence': domain_confidence
+                    'language': 'english'
                 }
-                processing_steps.append(f'Context analysis: Domain={domain}, Intent={intent}')
+                processing_steps.append(f'Context analysis: Intent={intent}')
             
             # Keyword Extraction
             if options.get('keywordExtraction', True):
@@ -627,7 +596,6 @@ def process_text_advanced():
             'sentimentAnalysis': True,
             'topicModeling': True,
             'relationshipMapping': True,
-            'domainDetection': True,
             'intentClassification': True,
             'conceptExtraction': True,
             'contextualEmbedding': True

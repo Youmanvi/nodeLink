@@ -3,177 +3,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced NLP Text Preprocessor</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Simple NLP Text Processor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            color: #2d3436;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #2d3436;
+            font-weight: 600;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            text-align: center;
+        }
+
+        .process-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .process-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .process-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .result-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .result-panel h3 {
+            color: #2d3436;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .keyword-tags, .entity-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .keyword-tag, .entity-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+
+        .entity-tag {
+            background: #4ecdc4;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .notification.success {
+            background: #4ecdc4;
+        }
+
+        .notification.error {
+            background: #ff6b6b;
+        }
+
+        .notification.warning {
+            background: #ffd93d;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🧠 Advanced NLP Text Preprocessor</h1>
-            <p>Extract keywords, context, and relationships for LLM processing</p>
+            <h1>🧠 Simple NLP Text Processor</h1>
+            <p>Extract keywords, analyze context, and process text with advanced NLP</p>
         </header>
         
         <div class="input-section">
             <div class="input-group">
-                <label for="inputText">Enter your text for comprehensive NLP preprocessing:</label>
+                <label for="inputText">Enter your text for NLP analysis:</label>
                 <textarea 
                     id="inputText" 
-                    placeholder="Enter any text - articles, documents, conversations, technical content, or any other text. The system will automatically identify the context, extract key information, and prepare it for LLM processing..."
-                    rows="12"
+                    placeholder="Enter any text - articles, documents, conversations, technical content, or any other text. The system will extract keywords, analyze context, and provide comprehensive NLP insights..."
+                    rows="8"
                 ></textarea>
             </div>
             
             <div class="controls">
-                <div class="processing-options">
-                    <h3>📋 Processing Options</h3>
-                    <div class="checkbox-grid">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="basicPreprocessing" checked>
-                            <label for="basicPreprocessing">Basic Preprocessing</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="keywordExtraction" checked>
-                            <label for="keywordExtraction">Keyword Extraction</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="entityRecognition" checked>
-                            <label for="entityRecognition">Entity Recognition</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="sentimentAnalysis" checked>
-                            <label for="sentimentAnalysis">Sentiment Analysis</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="topicModeling" checked>
-                            <label for="topicModeling">Topic Modeling</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="relationshipMapping" checked>
-                            <label for="relationshipMapping">Relationship Mapping</label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="context-analysis">
-                    <h3>🎯 Context Analysis</h3>
-                    <div class="checkbox-grid">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="domainDetection" checked>
-                            <label for="domainDetection">Domain Detection</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="intentClassification" checked>
-                            <label for="intentClassification">Intent Classification</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="conceptExtraction" checked>
-                            <label for="conceptExtraction">Concept Extraction</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="contextualEmbedding" checked>
-                            <label for="contextualEmbedding">Contextual Embedding</label>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="process-btn" onclick="processText()">
-                    <span class="btn-text">🚀 Process Text</span>
-                    <span class="btn-loader" style="display: none;">⏳ Processing...</span>
+                <button class="process-btn" id="processBtn" onclick="processText()">
+                    🚀 Process Text
                 </button>
             </div>
         </div>
         
-        <div class="results" id="results" style="display: none;">
+        <div class="results" id="results">
             <div class="result-grid">
-                <!-- Original Text Panel -->
+                <!-- Keywords & Entities -->
                 <div class="result-panel">
-                    <h3>📝 Original Text</h3>
-                    <div class="result-content" id="originalText"></div>
-                    <div class="text-stats">
-                        <span id="originalStats">0 words, 0 characters</span>
-                    </div>
-                </div>
-                
-                <!-- Context Analysis Panel -->
-                <div class="result-panel">
-                    <h3>🎯 Context Analysis</h3>
-                    <div class="result-content" id="contextAnalysis"></div>
-                </div>
-                
-                <!-- Keywords & Entities Panel -->
-                <div class="result-panel full-width">
-                    <h3>🔑 Keywords & Named Entities</h3>
-                    <div class="keywords-container">
+                    <h3>🔑 Keywords & Entities</h3>
+                    <div class="result-content">
                         <div class="keyword-section">
                             <h4>Top Keywords</h4>
                             <div class="keyword-tags" id="topKeywords"></div>
                         </div>
-                        <div class="keyword-section">
+                        <br>
+                        <div class="entity-section">
                             <h4>Named Entities</h4>
                             <div class="entity-tags" id="namedEntities"></div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Relationships Panel -->
-                <div class="result-panel full-width">
-                    <h3>🔗 Concept Relationships</h3>
-                    <div class="relationships-container" id="relationships"></div>
-                </div>
-                
-                <!-- Processed Text Panel -->
+                <!-- Context Analysis -->
                 <div class="result-panel">
-                    <h3>⚡ Processed Text</h3>
-                    <div class="result-content" id="processedText"></div>
+                    <h3>🎯 Context Analysis</h3>
+                    <div class="result-content" id="contextAnalysis"></div>
                 </div>
                 
-                <!-- LLM-Ready Output Panel -->
+                <!-- Sentiment Analysis -->
                 <div class="result-panel">
-                    <h3>🤖 LLM-Ready Format</h3>
-                    <div class="result-content code-format" id="llmFormat"></div>
-                    <button class="copy-btn" onclick="copyToClipboard('llmFormat')">📋 Copy</button>
+                    <h3>😊 Sentiment Analysis</h3>
+                    <div class="result-content" id="sentimentAnalysis"></div>
                 </div>
                 
-                <!-- Statistics Panel -->
-                <div class="result-panel full-width">
-                    <h3>📊 Processing Statistics</h3>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value" id="originalWords">0</div>
-                            <div class="stat-label">Original Words</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="processedWords">0</div>
-                            <div class="stat-label">Processed Words</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="keywordCount">0</div>
-                            <div class="stat-label">Keywords Found</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="entityCount">0</div>
-                            <div class="stat-label">Entities Found</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="relationshipCount">0</div>
-                            <div class="stat-label">Relationships</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="sentimentScore">Neutral</div>
-                            <div class="stat-label">Sentiment</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Processing Log Panel -->
-                <div class="result-panel full-width">
-                    <h3>🛠️ Processing Pipeline</h3>
-                    <div class="processing-log" id="processingLog"></div>
+                <!-- Statistics -->
+                <div class="result-panel">
+                    <h3>📊 Statistics</h3>
+                    <div class="result-content" id="processingStats"></div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script src="script.js"></script>
+
+    <script>
+        class SimpleNLPProcessor {
+            constructor() {
+                this.apiBaseUrl = 'http://127.0.0.1:5000/api';
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                const textarea = document.getElementById('inputText');
+                const button = document.getElementById('processBtn');
+                
+                textarea.addEventListener('input', () => {
+                    const text = textarea.value.trim();
+                    button.disabled = text.length < 10;
+                });
+            }
+
+            async processText() {
+                const inputText = document.getElementById('inputText').value.trim();
+                
+                if (!inputText) {
+                    this.showNotification('Please enter some text to process!', 'warning');
+                    return;
+                }
+
+                if (inputText.length < 10) {
+                    this.showNotification('Please enter more text for meaningful analysis (at least 10 characters).', 'warning');
+                    return;
+                }
+
+                const button = document.getElementById('processBtn');
+                button.disabled = true;
+                button.textContent = '⏳ Processing...';
+
+                try {
+                    const result = await this.callNLPAPI(inputText);
+                    this.displayResults(result);
+                    this.showNotification('Text processing completed successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error('Processing error:', error);
+                    this.showNotification('An error occurred during processing.', 'error');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = '🚀 Process Text';
+                }
+            }
+
+            async callNLPAPI(text) {
+                const requestBody = {
+                    text: text,
+                    options: {
+                        basicPreprocessing: true,
+                        keywordExtraction: true,
+                        entityRecognition: true,
+                        sentimentAnalysis: true,
+                        contextualEmbedding: true,
+                        relationshipMapping: true,
+                        topicModeling: true,
+                        intentClassification: true,
+                        conceptExtraction: true
+                    },
+                    timestamp: new Date().toISOString()
+                };
+
+                const response = await fetch(`${this.apiBaseUrl}/process-advanced`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            }
+
+            displayResults(result) {
+                document.getElementById('results').style.display = 'block';
+                
+                // Display keywords
+                this.displayKeywords(result.keywords || []);
+                
+                // Display entities
+                this.displayEntities(result.entities || []);
+                
+                // Display context analysis
+                this.displayContextAnalysis(result.context_analysis || {});
+                
+                // Display sentiment analysis
+                this.displaySentimentAnalysis(result.sentiment || {});
+                
+                // Display processing stats
+                this.displayProcessingStats(result.statistics || {});
+                
+                // Scroll to results
+                document.getElementById('results').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+
+            displayKeywords(keywords) {
+                const container = document.getElementById('topKeywords');
+                container.innerHTML = '';
+                
+                keywords.slice(0, 15).forEach(keyword => {
+                    const tag = document.createElement('span');
+                    tag.className = 'keyword-tag';
+                    tag.textContent = `${keyword.word} (${keyword.score.toFixed(2)})`;
+                    container.appendChild(tag);
+                });
+            }
+
+            displayEntities(entities) {
+                const container = document.getElementById('namedEntities');
+                container.innerHTML = '';
+                
+                entities.forEach(entity => {
+                    const tag = document.createElement('span');
+                    tag.className = 'entity-tag';
+                    tag.textContent = `${entity.text} (${entity.label})`;
+                    container.appendChild(tag);
+                });
+            }
+
+            displayContextAnalysis(context) {
+                const container = document.getElementById('contextAnalysis');
+                container.innerHTML = `
+                    <p><strong>Intent:</strong> ${context.intent || 'Informational'}</p>
+                    <p><strong>Complexity:</strong> ${context.complexity || 'Standard'}</p>
+                    <p><strong>Readability Score:</strong> ${context.readability_score || 'N/A'}</p>
+                    <p><strong>Grade Level:</strong> ${context.grade_level || 'N/A'}</p>
+                `;
+            }
+
+            displaySentimentAnalysis(sentiment) {
+                const container = document.getElementById('sentimentAnalysis');
+                container.innerHTML = `
+                    <p><strong>Overall Sentiment:</strong> ${sentiment.label || 'Neutral'}</p>
+                    <p><strong>Confidence:</strong> ${(sentiment.confidence * 100 || 0).toFixed(1)}%</p>
+                    <p><strong>Positive:</strong> ${(sentiment.positive * 100 || 0).toFixed(1)}%</p>
+                    <p><strong>Negative:</strong> ${(sentiment.negative * 100 || 0).toFixed(1)}%</p>
+                    <p><strong>Neutral:</strong> ${(sentiment.neutral * 100 || 0).toFixed(1)}%</p>
+                `;
+            }
+
+            displayProcessingStats(stats) {
+                const container = document.getElementById('processingStats');
+                container.innerHTML = `
+                    <p><strong>Original Words:</strong> ${stats.original_word_count || 0}</p>
+                    <p><strong>Processed Words:</strong> ${stats.processed_word_count || 0}</p>
+                    <p><strong>Keywords Found:</strong> ${stats.keyword_count || 0}</p>
+                    <p><strong>Entities Found:</strong> ${stats.entity_count || 0}</p>
+                    <p><strong>Processing Reduction:</strong> ${stats.processing_reduction || 0}%</p>
+                `;
+            }
+
+            showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => notification.classList.add('show'), 100);
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(notification), 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize the processor when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.nlpProcessor = new SimpleNLPProcessor();
+        });
+
+        // Global function for button onclick
+        function processText() {
+            if (window.nlpProcessor) {
+                window.nlpProcessor.processText();
+            }
+        }
+    </script>
 </body>
-</html> 
+</html>
