@@ -395,11 +395,14 @@ Required JSON format:
     {
       "id": "unique_id",
       "label": "Node Name",
+      "shortLabel": "Short Name",
       "type": "entity|keyword",
       "aiConfidence": 0.9,
-      "aiCategory": "PERSON|ORG|LOCATION|CONCEPT",
+      "aiCategory": "PERSON|ORG|LOCATION|EVENT|TECHNOLOGY|SCIENCE|POLITICS|CULTURE|HEALTH|EDUCATION|CONCEPT",
       "aiInsights": ["insight1", "insight2"],
-      "sourceText": "original text snippet"
+      "sourceText": "original text snippet",
+      "description": "detailed description",
+      "importance": 0.8
     }
   ],
   "links": [
@@ -410,7 +413,8 @@ Required JSON format:
       "strength": 0.8,
       "aiDetected": true,
       "description": "relationship description",
-      "context": "supporting context"
+      "context": "supporting context",
+      "animated": true
     }
   ]
 }
@@ -423,6 +427,9 @@ Guidelines:
 - Provide meaningful categories and insights
 - Keep node IDs simple and descriptive
 - Ensure all links reference valid node IDs
+- Add shortLabel for display (max 15 chars)
+- Set animated: true for important relationships
+- Use diverse aiCategory values for better color assignment
 
 Respond with valid JSON only:`;
 

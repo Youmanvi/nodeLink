@@ -3,16 +3,30 @@ import { X } from 'lucide-react';
 
 // Global Configuration - Easy to modify
 const GRAPH_CONFIG = {
-  // Color Palette (Muted Pastels)
+  // Enhanced Color Palette with more entity types
   colors: {
     background: '#2C2C2C',
     foreground: '#E4E4E4',
     border: '#4A4A4A',
     accent: '#3A3A3A',
     muted: '#B8B8B8',
+    // Primary entity types
     people: '#B39CD0',      // Lavender
     events: '#FFC1CC',      // Soft Pink
     places: '#A8DADC',      // Light Cyan
+    // Extended entity types
+    organizations: '#FFD93D', // Yellow
+    concepts: '#6BCF7F',      // Green
+    dates: '#4ECDC4',         // Teal
+    money: '#FF8A80',         // Light Red
+    quantities: '#A8DADC',    // Light Blue
+    technology: '#F4A261',    // Orange
+    science: '#E76F51',       // Coral
+    politics: '#9B59B6',      // Purple
+    culture: '#E67E22',       // Dark Orange
+    health: '#1ABC9C',        // Turquoise
+    education: '#3498DB',     // Blue
+    // Link colors
     linkDefault: '#B8B8B8',
     linkHighlight: '#E4E4E4',
     animatedParticle: '#B39CD0'
@@ -84,7 +98,7 @@ interface Node {
   vx: number;
   vy: number;
   color: string;
-  type: 'people' | 'events' | 'places';
+  type: string;
   description: string;
 }
 
@@ -93,6 +107,8 @@ interface AIEnhancedNode extends Node {
   aiCategory?: string;
   aiInsights?: string[];
   sourceText?: string;
+  importance?: number;
+  category?: string;
 }
 
 interface Link {
@@ -117,6 +133,90 @@ interface NodeLinkGraphProps {
   data?: GraphData | null;
   geminiProcessor?: any;
 }
+
+// Dynamic color assignment function
+const getDynamicColor = (node: any): string => {
+  // Check AI categories first
+  if (node.aiCategory === 'PERSON') return GRAPH_CONFIG.colors.people;
+  if (node.aiCategory === 'ORG' || node.aiCategory === 'ORGANIZATION') return GRAPH_CONFIG.colors.organizations;
+  if (node.aiCategory === 'LOCATION' || node.aiCategory === 'GPE') return GRAPH_CONFIG.colors.places;
+  if (node.aiCategory === 'EVENT') return GRAPH_CONFIG.colors.events;
+  if (node.aiCategory === 'DATE' || node.aiCategory === 'TIME') return GRAPH_CONFIG.colors.dates;
+  if (node.aiCategory === 'MONEY' || node.aiCategory === 'PERCENT') return GRAPH_CONFIG.colors.money;
+  if (node.aiCategory === 'QUANTITY') return GRAPH_CONFIG.colors.quantities;
+  if (node.aiCategory === 'CARDINAL' || node.aiCategory === 'ORDINAL') return GRAPH_CONFIG.colors.quantities;
+  if (node.aiCategory === 'TECHNOLOGY') return GRAPH_CONFIG.colors.technology;
+  if (node.aiCategory === 'SCIENCE') return GRAPH_CONFIG.colors.science;
+  if (node.aiCategory === 'POLITICS') return GRAPH_CONFIG.colors.politics;
+  if (node.aiCategory === 'CULTURE') return GRAPH_CONFIG.colors.culture;
+  if (node.aiCategory === 'HEALTH') return GRAPH_CONFIG.colors.health;
+  if (node.aiCategory === 'EDUCATION') return GRAPH_CONFIG.colors.education;
+  
+  // Check entity types
+  if (node.type === 'entity') return GRAPH_CONFIG.colors.people;
+  if (node.type === 'keyword') return GRAPH_CONFIG.colors.concepts;
+  
+  // Check labels for common patterns
+  const label = node.label?.toLowerCase() || '';
+  if (label.includes('person') || label.includes('people') || label.includes('individual')) return GRAPH_CONFIG.colors.people;
+  if (label.includes('organization') || label.includes('company') || label.includes('agency')) return GRAPH_CONFIG.colors.organizations;
+  if (label.includes('location') || label.includes('place') || label.includes('city') || label.includes('country')) return GRAPH_CONFIG.colors.places;
+  if (label.includes('event') || label.includes('meeting') || label.includes('conference')) return GRAPH_CONFIG.colors.events;
+  if (label.includes('date') || label.includes('time') || label.includes('year')) return GRAPH_CONFIG.colors.dates;
+  if (label.includes('money') || label.includes('dollar') || label.includes('cost') || label.includes('price')) return GRAPH_CONFIG.colors.money;
+  if (label.includes('number') || label.includes('count') || label.includes('amount')) return GRAPH_CONFIG.colors.quantities;
+  if (label.includes('tech') || label.includes('software') || label.includes('computer')) return GRAPH_CONFIG.colors.technology;
+  if (label.includes('science') || label.includes('research') || label.includes('study')) return GRAPH_CONFIG.colors.science;
+  if (label.includes('political') || label.includes('government') || label.includes('policy')) return GRAPH_CONFIG.colors.politics;
+  if (label.includes('culture') || label.includes('art') || label.includes('music')) return GRAPH_CONFIG.colors.culture;
+  if (label.includes('health') || label.includes('medical') || label.includes('doctor')) return GRAPH_CONFIG.colors.health;
+  if (label.includes('education') || label.includes('school') || label.includes('university')) return GRAPH_CONFIG.colors.education;
+  
+  // Default colorful assignment - no gray!
+  const colors = [
+    GRAPH_CONFIG.colors.people,    // Lavender
+    GRAPH_CONFIG.colors.events,    // Soft Pink  
+    GRAPH_CONFIG.colors.places,    // Light Cyan
+    GRAPH_CONFIG.colors.organizations, // Yellow
+    GRAPH_CONFIG.colors.concepts,  // Green
+    GRAPH_CONFIG.colors.dates,     // Teal
+    GRAPH_CONFIG.colors.money,     // Light Red
+    GRAPH_CONFIG.colors.quantities, // Light Blue
+    GRAPH_CONFIG.colors.technology, // Orange
+    GRAPH_CONFIG.colors.science,   // Coral
+    GRAPH_CONFIG.colors.politics,  // Purple
+    GRAPH_CONFIG.colors.culture,   // Dark Orange
+    GRAPH_CONFIG.colors.health,    // Turquoise
+    GRAPH_CONFIG.colors.education  // Blue
+  ];
+  
+  // Use hash of label to consistently assign color
+  let hash = 0;
+  for (let i = 0; i < label.length; i++) {
+    hash = ((hash << 5) - hash + label.charCodeAt(i)) & 0xffffffff;
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
+// Dynamic type assignment function
+const getDynamicType = (node: any): string => {
+  if (node.aiCategory === 'PERSON') return 'people';
+  if (node.aiCategory === 'ORG' || node.aiCategory === 'ORGANIZATION') return 'organizations';
+  if (node.aiCategory === 'LOCATION' || node.aiCategory === 'GPE') return 'places';
+  if (node.aiCategory === 'EVENT') return 'events';
+  if (node.aiCategory === 'DATE' || node.aiCategory === 'TIME') return 'dates';
+  if (node.aiCategory === 'MONEY' || node.aiCategory === 'PERCENT') return 'money';
+  if (node.aiCategory === 'QUANTITY') return 'quantities';
+  if (node.aiCategory === 'TECHNOLOGY') return 'technology';
+  if (node.aiCategory === 'SCIENCE') return 'science';
+  if (node.aiCategory === 'POLITICS') return 'politics';
+  if (node.aiCategory === 'CULTURE') return 'culture';
+  if (node.aiCategory === 'HEALTH') return 'health';
+  if (node.aiCategory === 'EDUCATION') return 'education';
+  if (node.type === 'entity') return 'people';
+  if (node.type === 'keyword') return 'concepts';
+  return 'concepts';
+};
 
 const NodeLinkGraph: React.FC<NodeLinkGraphProps> = ({ data: externalData }) => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -151,34 +251,53 @@ const NodeLinkGraph: React.FC<NodeLinkGraphProps> = ({ data: externalData }) => 
       let links: AIEnhancedLink[];
 
       if (externalData && externalData.nodes.length > 0) {
-        rawNodes = externalData.nodes;
-        links = externalData.links;
+        // Process external data with dynamic colors and types
+        rawNodes = externalData.nodes.map((node, index) => {
+          // Generate initial positions if not provided
+          const x = node.x || (Math.random() * (dimensions.width - 200) + 100);
+          const y = node.y || (Math.random() * (dimensions.height - 200) + 100);
+          
+          return {
+            ...node,
+            id: node.id || `node_${index}`,
+            label: node.label || 'Unknown',
+            shortLabel: node.shortLabel || (node.label && node.label.length > 15 ? node.label.substring(0, 15) + "..." : node.label) || 'Unknown',
+            x,
+            y,
+            vx: 0,
+            vy: 0,
+            color: getDynamicColor(node),
+            type: getDynamicType(node),
+            description: node.description || node.aiInsights?.join('. ') || `Type: ${node.type || 'unknown'}`
+          };
+        });
+        links = externalData.links || [];
       } else {
-        // Default demo data
+        // Default demo data with dynamic colors
         rawNodes = [
         // People
-        { id: '1', label: 'Richard Nixon', shortLabel: 'Nixon', x: 200, y: 200, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.people, type: 'people', description: 'Former President of the United States, served from 1969 to 1974.' },
-        { id: '3', label: 'John F. Kennedy', shortLabel: 'JFK', x: 300, y: 150, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.people, type: 'people', description: '35th President of the United States, served from 1961 to 1963.' },
-        { id: '6', label: 'Lyndon Johnson', shortLabel: 'LBJ', x: 250, y: 400, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.people, type: 'people', description: '36th President of the United States, served from 1963 to 1969.' },
+        { id: '1', label: 'Richard Nixon', shortLabel: 'Nixon', x: 200, y: 200, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'PERSON', label: 'Richard Nixon' }), type: getDynamicType({ aiCategory: 'PERSON' }), description: 'Former President of the United States, served from 1969 to 1974.' },
+        { id: '3', label: 'John F. Kennedy', shortLabel: 'JFK', x: 300, y: 150, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'PERSON', label: 'John F. Kennedy' }), type: getDynamicType({ aiCategory: 'PERSON' }), description: '35th President of the United States, served from 1961 to 1963.' },
+        { id: '6', label: 'Lyndon Johnson', shortLabel: 'LBJ', x: 250, y: 400, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'PERSON', label: 'Lyndon Johnson' }), type: getDynamicType({ aiCategory: 'PERSON' }), description: '36th President of the United States, served from 1963 to 1969.' },
         
         // Events
-        { id: '2', label: 'Watergate Scandal', shortLabel: 'Watergate', x: 180, y: 100, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.events, type: 'events', description: 'Political scandal that led to Nixon\'s resignation in 1974.' },
-        { id: '4', label: 'Cold War', shortLabel: 'Cold War', x: 100, y: 250, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.events, type: 'events', description: 'Period of geopolitical tension between the US and Soviet Union.' },
-        { id: '5', label: 'Vietnam War', shortLabel: 'Vietnam', x: 150, y: 350, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.events, type: 'events', description: 'Conflict in Vietnam from 1955 to 1975.' },
-        { id: '7', label: 'Civil Rights Movement', shortLabel: 'Rights', x: 350, y: 300, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.events, type: 'events', description: 'Movement for racial equality in the United States.' },
-        { id: '9', label: 'Apollo Program', shortLabel: 'Apollo', x: 380, y: 150, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.events, type: 'events', description: 'Space program that landed humans on the Moon.' },
-        { id: '16', label: 'Pentagon Papers', shortLabel: 'Papers', x: 220, y: 600, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.events, type: 'events', description: 'Classified documents about Vietnam War.' },
+        { id: '2', label: 'Watergate Scandal', shortLabel: 'Watergate', x: 180, y: 100, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'EVENT', label: 'Watergate Scandal' }), type: getDynamicType({ aiCategory: 'EVENT' }), description: 'Political scandal that led to Nixon\'s resignation in 1974.' },
+        { id: '4', label: 'Cold War', shortLabel: 'Cold War', x: 100, y: 250, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'EVENT', label: 'Cold War' }), type: getDynamicType({ aiCategory: 'EVENT' }), description: 'Period of geopolitical tension between the US and Soviet Union.' },
+        { id: '5', label: 'Vietnam War', shortLabel: 'Vietnam', x: 150, y: 350, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'EVENT', label: 'Vietnam War' }), type: getDynamicType({ aiCategory: 'EVENT' }), description: 'Conflict in Vietnam from 1955 to 1975.' },
+        { id: '7', label: 'Civil Rights Movement', shortLabel: 'Rights', x: 350, y: 300, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'EVENT', label: 'Civil Rights Movement' }), type: getDynamicType({ aiCategory: 'EVENT' }), description: 'Movement for racial equality in the United States.' },
+        { id: '9', label: 'Apollo Program', shortLabel: 'Apollo', x: 380, y: 150, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'EVENT', label: 'Apollo Program' }), type: getDynamicType({ aiCategory: 'EVENT' }), description: 'Space program that landed humans on the Moon.' },
+        { id: '16', label: 'Pentagon Papers', shortLabel: 'Papers', x: 220, y: 600, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'EVENT', label: 'Pentagon Papers' }), type: getDynamicType({ aiCategory: 'EVENT' }), description: 'Classified documents about Vietnam War.' },
         
         // Places
-        { id: '8', label: 'NASA Headquarters', shortLabel: 'NASA', x: 320, y: 200, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'National Aeronautics and Space Administration headquarters.' },
-        { id: '10', label: 'Supreme Court', shortLabel: 'Court', x: 280, y: 500, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'Highest judicial authority in the United States.' },
-        { id: '11', label: 'US Congress', shortLabel: 'Congress', x: 200, y: 50, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'Legislative branch of the US government.' },
-        { id: '12', label: 'Soviet Union', shortLabel: 'USSR', x: 50, y: 200, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'Former communist state and Cold War adversary.' },
-        { id: '13', label: 'Media Centers', shortLabel: 'Media', x: 100, y: 400, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'Press and broadcasting institutions.' },
-        { id: '14', label: 'Public Square', shortLabel: 'Public', x: 80, y: 320, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'Center of public opinion and discourse.' },
-        { id: '15', label: 'Wall Street', shortLabel: 'Economy', x: 350, y: 450, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'Financial center and economic hub.' },
-        { id: '17', label: 'United Nations', shortLabel: 'UN', x: 150, y: 700, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'International diplomatic headquarters.' },
-        { id: '18', label: 'Silicon Valley', shortLabel: 'Tech', x: 300, y: 650, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'Center of technological advancement and innovation.' }
+        { id: '8', label: 'NASA Headquarters', shortLabel: 'NASA', x: 320, y: 200, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'LOCATION', label: 'NASA Headquarters' }), type: getDynamicType({ aiCategory: 'LOCATION' }), description: 'National Aeronautics and Space Administration headquarters.' },
+        { id: '10', label: 'Supreme Court', shortLabel: 'Court', x: 280, y: 500, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'LOCATION', label: 'Supreme Court' }), type: getDynamicType({ aiCategory: 'LOCATION' }), description: 'Highest judicial authority in the United States.' },
+        { id: '11', label: 'US Congress', shortLabel: 'Congress', x: 200, y: 50, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'LOCATION', label: 'US Congress' }), type: getDynamicType({ aiCategory: 'LOCATION' }), description: 'Legislative branch of the US government.' },
+        { id: '12', label: 'Soviet Union', shortLabel: 'USSR', x: 50, y: 200, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'LOCATION', label: 'Soviet Union' }), type: getDynamicType({ aiCategory: 'LOCATION' }), description: 'Former communist state and Cold War adversary.' },
+        { id: '13', label: 'Media Centers', shortLabel: 'Media', x: 100, y: 400, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'LOCATION', label: 'Media Centers' }), type: getDynamicType({ aiCategory: 'LOCATION' }), description: 'Press and broadcasting institutions.' },
+        { id: '14', label: 'Public Square', shortLabel: 'Public', x: 80, y: 320, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'LOCATION', label: 'Public Square' }), type: getDynamicType({ aiCategory: 'LOCATION' }), description: 'Center of public opinion and discourse.' },
+        { id: '15', label: 'Wall Street', shortLabel: 'Economy', x: 350, y: 450, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'LOCATION', label: 'Wall Street' }), type: getDynamicType({ aiCategory: 'LOCATION' }), description: 'Financial center and economic hub.' },
+        { id: '17', label: 'United Nations', shortLabel: 'UN', x: 150, y: 700, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'LOCATION', label: 'United Nations' }), type: getDynamicType({ aiCategory: 'LOCATION' }), description: 'International diplomatic headquarters.' },
+        { id: '18', label: 'Silicon Valley', shortLabel: 'Tech', x: 300, y: 650, vx: 0, vy: 0, color: getDynamicColor({ aiCategory: 'LOCATION', label: 'Silicon Valley' }), type: getDynamicType({ aiCategory: 'LOCATION' }), description: 'Center of technological advancement and innovation.' }
         ];
 
         links = [
@@ -436,7 +555,7 @@ const NodeLinkGraph: React.FC<NodeLinkGraphProps> = ({ data: externalData }) => 
         <p style={{ color: GRAPH_CONFIG.colors.muted }} className="text-sm mt-1">
           People, Events & Places
         </p>
-        <div className={`flex ${GRAPH_CONFIG.ui.legendGap} mt-2 text-xs`}>
+        <div className={`flex flex-wrap ${GRAPH_CONFIG.ui.legendGap} mt-2 text-xs`}>
           <div className="flex items-center gap-1">
             <div 
               className={`${GRAPH_CONFIG.ui.legendSize} rounded-full`}
@@ -457,6 +576,27 @@ const NodeLinkGraph: React.FC<NodeLinkGraphProps> = ({ data: externalData }) => 
               style={{ backgroundColor: GRAPH_CONFIG.colors.places }}
             ></div>
             <span style={{ color: GRAPH_CONFIG.colors.muted }}>Places</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div 
+              className={`${GRAPH_CONFIG.ui.legendSize} rounded-full`}
+              style={{ backgroundColor: GRAPH_CONFIG.colors.organizations }}
+            ></div>
+            <span style={{ color: GRAPH_CONFIG.colors.muted }}>Organizations</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div 
+              className={`${GRAPH_CONFIG.ui.legendSize} rounded-full`}
+              style={{ backgroundColor: GRAPH_CONFIG.colors.concepts }}
+            ></div>
+            <span style={{ color: GRAPH_CONFIG.colors.muted }}>Concepts</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div 
+              className={`${GRAPH_CONFIG.ui.legendSize} rounded-full`}
+              style={{ backgroundColor: GRAPH_CONFIG.colors.technology }}
+            ></div>
+            <span style={{ color: GRAPH_CONFIG.colors.muted }}>Technology</span>
           </div>
         </div>
       </div>
