@@ -589,17 +589,17 @@ def process_text_advanced():
         if len(text) > 50000:  # Limit text length
             return jsonify({'error': 'Text too long. Maximum 50,000 characters allowed.'}), 400
         
-        # Set default options
+        # Set streamlined options - only what we need for knowledge graphs
         default_options = {
             'basicPreprocessing': True,
             'keywordExtraction': True,
             'entityRecognition': True,
-            'sentimentAnalysis': True,
-            'topicModeling': True,
             'relationshipMapping': True,
-            'intentClassification': True,
-            'conceptExtraction': True,
-            'contextualEmbedding': True
+            'sentimentAnalysis': False,  # Not needed for knowledge graphs
+            'topicModeling': False,      # Not needed for knowledge graphs
+            'intentClassification': False, # Not needed for knowledge graphs
+            'conceptExtraction': False,   # Not needed for knowledge graphs
+            'contextualEmbedding': False  # Not needed for knowledge graphs
         }
         
         # Merge with provided options
@@ -617,19 +617,14 @@ def process_text_advanced():
                 'timestamp': datetime.now().isoformat()
             }), 500
         
-        # Add metadata
+        # Return only essential data for knowledge graphs - no metadata
         response_data = {
-            **results,
-            'metadata': {
-                'processed_at': datetime.now().isoformat(),
-                'processing_time': 'calculated_by_frontend',
-                'api_version': '2.0',
-                'total_steps': len(results.get('processing_steps', [])),
-                'options_used': processing_options
-            }
+            'entities': results.get('entities', []),
+            'keywords': results.get('keywords', []),
+            'relationships': results.get('relationships', [])
         }
         
-        logger.info(f"Successfully processed text with {len(results.get('processing_steps', []))} steps")
+        logger.info(f"Successfully processed text: {len(response_data['entities'])} entities, {len(response_data['keywords'])} keywords, {len(response_data['relationships'])} relationships")
         
         return jsonify(response_data)
         

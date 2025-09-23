@@ -6,6 +6,7 @@ function App() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [geminiProcessor, setGeminiProcessor] = useState(null);
     const [aiEnabled, setAiEnabled] = useState(false);
+    const [results, setResults] = useState(null);
 
     // Initialize Gemini Nano Processor
     useEffect(() => {
@@ -29,6 +30,23 @@ function App() {
             });
         }
     }, []);
+
+    // Display functions
+    const displayNodeLinkGraph = (graphData) => {
+        setResults({
+            type: 'nodeLinkGraph',
+            data: graphData,
+            summary: `Graph with ${graphData.nodes?.length || 0} nodes and ${graphData.links?.length || 0} links`
+        });
+    };
+
+    const displayFlaskResults = (flaskData) => {
+        setResults({
+            type: 'flaskNLP',
+            data: flaskData,
+            summary: `${flaskData.entities?.length || 0} entities, ${flaskData.keywords?.length || 0} keywords, ${flaskData.relationships?.length || 0} relationships`
+        });
+    };
 
     const processText = async () => {
         if (!inputText.trim()) return;
@@ -68,37 +86,45 @@ function App() {
             const flaskResults = await flaskResponse.json();
             console.log('Flask NLP Results:', flaskResults);
             
-            // Step 2: Gemini post-processing and fine-tuning
-            let enhancedResults = flaskResults;
+            // Step 2: Gemini conversion to NodeLinkGraph format
+            let nodeLinkGraph = null;
             if (aiEnabled && geminiProcessor && geminiProcessor.isInitialized) {
                 try {
-                    console.log('Step 2: Running Gemini post-processing...');
+                    console.log('Step 2: Converting to NodeLinkGraph format with Gemini...');
                     const aiResults = await geminiProcessor.enhanceNLPResults(
                         flaskResults, 
                         inputText
                     );
-                    console.log('Gemini Enhanced Results:', aiResults);
+                    console.log('Gemini NodeLinkGraph Results:', aiResults);
                     
-                    if (aiResults.enhanced) {
-                        enhancedResults = aiResults;
-                        console.log('✅ AI enhancement successful!');
+                    if (aiResults.enhanced && aiResults.nodeLinkGraph) {
+                        nodeLinkGraph = aiResults.nodeLinkGraph;
+                        console.log('✅ NodeLinkGraph conversion successful!');
+                        console.log('📊 Graph Data:', JSON.stringify(nodeLinkGraph, null, 2));
                     } else {
-                        console.log('⚠️ AI enhancement failed, using Flask results');
+                        console.log('⚠️ NodeLinkGraph conversion failed, using Flask results only');
                     }
                 } catch (error) {
-                    console.warn('❌ AI enhancement failed:', error);
+                    console.warn('❌ NodeLinkGraph conversion failed:', error);
                 }
             } else {
                 console.log('⚠️ AI not enabled or not available, using Flask NLP only');
             }
             
-            // Step 3: Log final results
+            // Step 3: Display results
             console.log('🎯 Final Processing Results:', {
                 originalText: inputText,
                 flaskNLP: flaskResults,
-                enhancedResults: enhancedResults,
-                processingMethod: aiEnabled && geminiProcessor?.isInitialized ? 'Flask NLP + Gemini Nano' : 'Flask NLP Only'
+                nodeLinkGraph: nodeLinkGraph,
+                processingMethod: aiEnabled && geminiProcessor?.isInitialized ? 'Flask NLP + Gemini NodeLinkGraph' : 'Flask NLP Only'
             });
+            
+            // Display NodeLinkGraph JSON in the UI
+            if (nodeLinkGraph) {
+                displayNodeLinkGraph(nodeLinkGraph);
+            } else {
+                displayFlaskResults(flaskResults);
+            }
             
         } catch (error) {
             console.error('❌ Processing failed:', error);
@@ -183,6 +209,19 @@ function App() {
                 React.createElement('p', { className: 'console-text' },
                     React.createElement('strong', null, 'Console Output: '),
                     'Open your browser\'s developer console (F12) to see detailed processing results, including Flask NLP preprocessing and Gemini enhancement steps.'
+                )
+            )
+        ),
+        
+        // Results Display
+        results && React.createElement('div', { className: 'results-section' },
+            React.createElement('h3', { className: 'results-title' }, 'Processing Results'),
+            React.createElement('div', { className: 'results-summary' },
+                React.createElement('strong', null, results.summary)
+            ),
+            React.createElement('div', { className: 'results-data' },
+                React.createElement('pre', { className: 'json-display' },
+                    JSON.stringify(results.data, null, 2)
                 )
             )
         ),

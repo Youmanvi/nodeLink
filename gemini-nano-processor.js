@@ -359,7 +359,7 @@ Format as JSON:
     }
 
     /**
-     * Comprehensive text enhancement combining all capabilities
+     * Convert NLP results to NodeLinkGraph JSON format
      */
     async enhanceNLPResults(nlpResults, originalText) {
         if (!await this._ensureInitialized()) {
@@ -371,45 +371,73 @@ Format as JSON:
             };
         }
 
-        console.log('Enhancing NLP results with Gemini Nano...');
+        console.log('Converting NLP results to NodeLinkGraph format with Gemini Nano...');
 
         try {
-            // Run all enhancements in parallel for better performance
-            const [
-                keywordEnhancement,
-                relationshipAnalysis,
-                contentAnalysis,
-                contextualSnippets
-            ] = await Promise.all([
-                this.enhanceKeywords(originalText, nlpResults.keywords || []),
-                this.analyzeRelationships(
-                    originalText, 
-                    nlpResults.entities || [], 
-                    nlpResults.keywords || []
-                ),
-                this.analyzeContent(originalText),
-                this.generateContextualSnippets(
-                    originalText, 
-                    nlpResults.entities || [], 
-                    nlpResults.relationships || []
-                )
-            ]);
+            const prompt = `
+Convert this NLP analysis into a NodeLinkGraph JSON format for visualization.
 
+NLP INPUT:
+- Entities: ${JSON.stringify(nlpResults.entities || [])}
+- Keywords: ${JSON.stringify(nlpResults.keywords || [])}
+- Relationships: ${JSON.stringify(nlpResults.relationships || [])}
+
+ORIGINAL TEXT: "${originalText}"
+
+Create a knowledge graph with:
+1. NODES: Each entity and important keyword becomes a node
+2. LINKS: Each relationship becomes a link between nodes
+3. AI ENHANCEMENT: Add confidence scores, categories, and insights
+
+Required JSON format:
+{
+  "nodes": [
+    {
+      "id": "unique_id",
+      "label": "Node Name",
+      "type": "entity|keyword",
+      "aiConfidence": 0.9,
+      "aiCategory": "PERSON|ORG|LOCATION|CONCEPT",
+      "aiInsights": ["insight1", "insight2"],
+      "sourceText": "original text snippet"
+    }
+  ],
+  "links": [
+    {
+      "source": "node_id_1",
+      "target": "node_id_2", 
+      "label": "relationship_type",
+      "strength": 0.8,
+      "aiDetected": true,
+      "description": "relationship description",
+      "context": "supporting context"
+    }
+  ]
+}
+
+Guidelines:
+- Use entity labels as primary nodes
+- Include important keywords as concept nodes
+- Create links based on relationships
+- Add AI confidence scores (0.0-1.0)
+- Provide meaningful categories and insights
+- Keep node IDs simple and descriptive
+- Ensure all links reference valid node IDs
+
+Respond with valid JSON only:`;
+
+            const response = await this.session.prompt(prompt);
+            const graphData = this._parseJSONResponse(response);
+            
             return {
                 enhanced: true,
                 original: nlpResults,
-                geminiEnhanced: {
-                    keywords: keywordEnhancement,
-                    relationships: relationshipAnalysis,
-                    content: contentAnalysis,
-                    snippets: contextualSnippets
-                },
-                timestamp: new Date().toISOString(),
-                processingTime: Date.now() // Will be calculated by caller
+                nodeLinkGraph: graphData,
+                timestamp: new Date().toISOString()
             };
 
         } catch (error) {
-            console.error('Gemini Nano: Enhancement failed:', error);
+            console.error('Gemini Nano: NodeLinkGraph conversion failed:', error);
             return {
                 enhanced: false,
                 original: nlpResults,
