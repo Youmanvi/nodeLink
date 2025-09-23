@@ -38,6 +38,9 @@ function App() {
             data: graphData,
             summary: `Graph with ${graphData.nodes?.length || 0} nodes and ${graphData.links?.length || 0} links`
         });
+        
+        // Store graph data globally for visualization
+        window.currentGraphData = graphData;
     };
 
     const displayFlaskResults = (flaskData) => {
@@ -218,6 +221,13 @@ function App() {
             React.createElement('h3', { className: 'results-title' }, 'Processing Results'),
             React.createElement('div', { className: 'results-summary' },
                 React.createElement('strong', null, results.summary)
+            ),
+            results.type === 'nodeLinkGraph' && React.createElement('div', { className: 'graph-actions' },
+                React.createElement('button', {
+                    onClick: () => window.open('graph-visualization.html', '_blank'),
+                    className: 'button',
+                    style: { marginBottom: '1rem' }
+                }, 'Open Graph Visualization')
             ),
             React.createElement('div', { className: 'results-data' },
                 React.createElement('pre', { className: 'json-display' },
