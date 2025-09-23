@@ -30,31 +30,25 @@ class GeminiNanoProcessor {
      */
     async checkSupport() {
         try {
-            // Check if LanguageModel is available (the correct API)
-            if (!('LanguageModel' in self)) {
-                console.warn('Gemini Nano: LanguageModel API not available. Please enable chrome://flags/#prompt-api-for-gemini-nano and restart Chrome.');
+            // Check if the AI API is available
+            if (!('ai' in window) || !window.ai?.languageModel) {
+                console.warn('Gemini Nano: Browser AI API not available');
                 this.isSupported = false;
                 return false;
             }
 
-            console.log('Gemini Nano: LanguageModel API detected');
+            // Check availability
+            const availability = await window.ai.languageModel.capabilities();
             
-            // Check availability (this is the correct method according to the docs)
-            const available = await LanguageModel.availability();
-            console.log('Gemini Nano: LanguageModel availability:', available);
-            
-            if (available === 'unavailable') {
+            if (availability.available === 'readily') {
+                this.isSupported = true;
+                console.log('Gemini Nano: Ready for immediate use');
+            } else if (availability.available === 'after-download') {
+                this.isSupported = true;
+                console.log('Gemini Nano: Available after download');
+            } else {
                 this.isSupported = false;
-                console.warn('Gemini Nano: LanguageModel is unavailable on this device/browser');
-            } else if (available === 'downloadable') {
-                this.isSupported = true;
-                console.log('Gemini Nano: AI model needs to be downloaded');
-            } else if (available === 'downloading') {
-                this.isSupported = true;
-                console.log('Gemini Nano: AI model is downloading...');
-            } else if (available === 'available') {
-                this.isSupported = true;
-                console.log('Gemini Nano: AI ready for use');
+                console.warn('Gemini Nano: Not available on this device');
             }
             
             return this.isSupported;
@@ -86,19 +80,12 @@ class GeminiNanoProcessor {
                 }
             }
 
-            // Check availability before creating session
-            const available = await LanguageModel.availability();
-            if (available !== 'available') {
-                throw new Error(`LanguageModel not ready. Status: ${available}`);
-            }
-
             // Create session with configuration
-            this.session = await LanguageModel.create({
+            this.session = await window.ai.languageModel.create({
                 temperature: this.config.temperature,
                 topK: this.config.topK,
                 maxOutputTokens: this.config.maxOutputTokens,
-                systemPrompt: this.config.systemPrompt,
-                outputLanguage: 'en' // Specify output language to avoid warning
+                systemPrompt: this.config.systemPrompt
             });
 
             this.isInitialized = true;
@@ -120,7 +107,7 @@ class GeminiNanoProcessor {
             isSupported: this.isSupported,
             isInitialized: this.isInitialized,
             hasActiveSession: !!this.session,
-            browserSupport: 'LanguageModel' in self
+            browserSupport: 'ai' in window && !!window.ai?.languageModel
         };
     }
 
@@ -491,15 +478,15 @@ Format as JSON:
         if (!this.isSupported) {
             return {
                 supported: false,
-                reason: 'Browser does not support LanguageModel API'
+                reason: 'Browser does not support Chrome Built-in AI'
             };
         }
 
         try {
-            const availability = await LanguageModel.availability();
+            const capabilities = await window.ai.languageModel.capabilities();
             return {
                 supported: true,
-                availability: availability,
+                ...capabilities,
                 features: [
                     'Keyword Enhancement',
                     'Relationship Analysis', 

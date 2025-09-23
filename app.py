@@ -4,8 +4,9 @@ Comprehensive text analysis with keyword extraction, entity recognition,
 relationship mapping, and context analysis for LLM preparation.
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
+import os
 import spacy
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
@@ -715,6 +716,8 @@ def analyze_sentiment_only():
     except Exception as e:
         logger.error(f"Error in sentiment analysis: {e}")
         return jsonify({'error': str(e)}), 500
+
+# Flask is now API-only - no React serving
 
 @app.errorhandler(404)
 def not_found(error):

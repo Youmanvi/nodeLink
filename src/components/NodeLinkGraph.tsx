@@ -88,18 +88,37 @@ interface Node {
   description: string;
 }
 
+interface AIEnhancedNode extends Node {
+  aiConfidence?: number;
+  aiCategory?: string;
+  aiInsights?: string[];
+  sourceText?: string;
+}
+
 interface Link {
   source: string;
   target: string;
   animated?: boolean;
 }
 
-interface GraphData {
-  nodes: Node[];
-  links: Link[];
+interface AIEnhancedLink extends Link {
+  strength?: number;
+  aiDetected?: boolean;
+  description?: string;
+  context?: string;
 }
 
-const NodeLinkGraph: React.FC = () => {
+interface GraphData {
+  nodes: AIEnhancedNode[];
+  links: AIEnhancedLink[];
+}
+
+interface NodeLinkGraphProps {
+  data?: GraphData | null;
+  geminiProcessor?: any;
+}
+
+const NodeLinkGraph: React.FC<NodeLinkGraphProps> = ({ data: externalData }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 400, height: 1200 });
@@ -127,7 +146,16 @@ const NodeLinkGraph: React.FC = () => {
       // Brief initial delay for better UX
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      const rawNodes = [
+      // Use external data if provided, otherwise use default demo data
+      let rawNodes: AIEnhancedNode[];
+      let links: AIEnhancedLink[];
+
+      if (externalData && externalData.nodes.length > 0) {
+        rawNodes = externalData.nodes;
+        links = externalData.links;
+      } else {
+        // Default demo data
+        rawNodes = [
         // People
         { id: '1', label: 'Richard Nixon', shortLabel: 'Nixon', x: 200, y: 200, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.people, type: 'people', description: 'Former President of the United States, served from 1969 to 1974.' },
         { id: '3', label: 'John F. Kennedy', shortLabel: 'JFK', x: 300, y: 150, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.people, type: 'people', description: '35th President of the United States, served from 1961 to 1963.' },
@@ -151,23 +179,9 @@ const NodeLinkGraph: React.FC = () => {
         { id: '15', label: 'Wall Street', shortLabel: 'Economy', x: 350, y: 450, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'Financial center and economic hub.' },
         { id: '17', label: 'United Nations', shortLabel: 'UN', x: 150, y: 700, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'International diplomatic headquarters.' },
         { id: '18', label: 'Silicon Valley', shortLabel: 'Tech', x: 300, y: 650, vx: 0, vy: 0, color: GRAPH_CONFIG.colors.places, type: 'places', description: 'Center of technological advancement and innovation.' }
-      ];
+        ];
 
-      // Calculate initial center and apply offset
-      const centerX = rawNodes.reduce((sum, node) => sum + node.x, 0) / rawNodes.length;
-      const centerY = rawNodes.reduce((sum, node) => sum + node.y, 0) / rawNodes.length;
-      const targetX = dimensions.width / 2;
-      const targetY = dimensions.height / 2;
-      const offsetX = targetX - centerX;
-      const offsetY = targetY - centerY;
-      
-      const centeredNodes = rawNodes.map(node => ({
-        ...node,
-        x: node.x + offsetX,
-        y: node.y + offsetY
-      }));
-
-      const links = [
+        links = [
         { source: '1', target: '2', animated: true },
         { source: '1', target: '5', animated: true },
         { source: '1', target: '4', animated: false },
@@ -193,7 +207,22 @@ const NodeLinkGraph: React.FC = () => {
         { source: '17', target: '4', animated: false },
         { source: '18', target: '8', animated: true },
         { source: '18', target: '9', animated: false }
-      ];
+        ];
+      }
+
+      // Calculate initial center and apply offset
+      const centerX = rawNodes.reduce((sum, node) => sum + node.x, 0) / rawNodes.length;
+      const centerY = rawNodes.reduce((sum, node) => sum + node.y, 0) / rawNodes.length;
+      const targetX = dimensions.width / 2;
+      const targetY = dimensions.height / 2;
+      const offsetX = targetX - centerX;
+      const offsetY = targetY - centerY;
+      
+      const centeredNodes = rawNodes.map(node => ({
+        ...node,
+        x: node.x + offsetX,
+        y: node.y + offsetY
+      }));
 
       // Set data and begin stabilization
       setData({
@@ -207,7 +236,7 @@ const NodeLinkGraph: React.FC = () => {
     if (dimensions.width > 0 && dimensions.height > 0) {
       initializeGraph();
     }
-  }, [dimensions.width, dimensions.height]);
+  }, [dimensions.width, dimensions.height, externalData]);
 
   // Force simulation with stabilization tracking
   useEffect(() => {
@@ -592,6 +621,31 @@ const NodeLinkGraph: React.FC = () => {
           <p style={{ color: GRAPH_CONFIG.colors.muted }} className="text-sm leading-relaxed">
             {selectedNodeData.description}
           </p>
+          
+          {/* AI Enhancement Information */}
+          {(selectedNodeData as AIEnhancedNode).aiConfidence && (
+            <div className="mt-3 pt-2" style={{ borderTop: `1px solid ${GRAPH_CONFIG.colors.border}` }}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                <span style={{ color: GRAPH_CONFIG.colors.foreground }} className="text-xs font-medium">
+                  AI Enhanced
+                </span>
+                <span style={{ color: GRAPH_CONFIG.colors.muted }} className="text-xs">
+                  ({(selectedNodeData as AIEnhancedNode).aiConfidence! * 100}% confidence)
+                </span>
+              </div>
+              {(selectedNodeData as AIEnhancedNode).aiInsights && (
+                <div className="space-y-1">
+                  {(selectedNodeData as AIEnhancedNode).aiInsights!.map((insight, index) => (
+                    <p key={index} style={{ color: GRAPH_CONFIG.colors.muted }} className="text-xs">
+                      • {insight}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
           <div className="mt-2 pt-2" style={{ borderTop: `1px solid ${GRAPH_CONFIG.colors.border}` }}>
             <span 
               style={{ color: `${GRAPH_CONFIG.colors.muted}70` }} 
