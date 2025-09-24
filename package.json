@@ -1,22 +1,33 @@
 {
   "name": "node-link",
-  "version": "1.0.0",
-  "main": "app.js",
+  "version": "2.0.0",
+  "description": "AI-Enhanced Knowledge Graph Visualization Platform",
+  "main": "backend/app.py",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "python backend/app.py",
+    "dev": "python backend/app.py",
+    "build": "echo 'Static files are already built'",
+    "test": "echo 'No tests specified'"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Youmanvi/nodeLink.git"
   },
-  "keywords": [],
+  "keywords": [
+    "knowledge-graph",
+    "nlp",
+    "ai",
+    "visualization",
+    "react",
+    "python",
+    "gemini-nano"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Youmanvi/nodeLink/issues"
   },
   "homepage": "https://github.com/Youmanvi/nodeLink#readme",
-  "description": "",
   "dependencies": {
     "body-parser": "^2.2.0",
     "express": "^5.1.0",
